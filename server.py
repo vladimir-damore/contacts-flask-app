@@ -9,13 +9,13 @@ class Contacts:
     def put_data(self, name, number):
         self.__my_curr.execute(f'insert into identity values ("{name}", {number})')
         self.__my_conn.commit()
-    
-    def close_conn(self):
-        self.__my_conn.close()
 
     def get_data(self):
         self.__my_curr.execute('select * from identity')
         return self.__my_curr.fetchall()
+
+    def close_conn(self):
+        self.__my_conn.close()
 
 app = Flask(__name__)
 
@@ -37,5 +37,10 @@ def home_page():
 
         return render_template('success.html')
  
+@app.route('/delete', methods=['GET', 'POST'])
+def delete_data():
+    if request.method == 'GET':
+        return render_template('success.html')
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
