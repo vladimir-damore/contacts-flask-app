@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, jsonify
 import sqlite3
 
 class Contacts:
@@ -75,6 +75,7 @@ def update_data(name):
         obj.close_connection()
 
         return redirect('/')
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
