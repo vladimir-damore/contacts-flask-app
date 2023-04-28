@@ -60,7 +60,6 @@ def delete_data(name):
 @app.route('/update/<string:name>', methods=['GET', 'POST'])
 def update_data(name):
     if request.method == 'GET':
-        print('get')
         obj = Contacts()
         number = obj.get_data_from_name(name)[0]
         obj.close_connection()
@@ -69,7 +68,6 @@ def update_data(name):
     
     elif request.method == 'POST':
         number = request.form.get('number')
-        print(name, number)
         obj = Contacts()
         obj.update_data(name, number)
         obj.close_connection()
