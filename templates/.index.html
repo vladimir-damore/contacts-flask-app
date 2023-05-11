@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block body %}
+
+<h1 style="text-align: center;margin: 10px;">Contacts App</h1>
+<form action="/" method="post">
+    <label class="form-label" style="margin: 15px;margin-left: 15px;text-align: left;">Name</label>
+    <input class="form-control" type="text" style="width: 200px;margin: 0px;margin-left: 15px;" name="name" />
+    <label class="form-label" style="margin: 15px;">Number</label>
+    <input class="form-control" type="number" style="width: 200px;margin-left: 15px;" name="number" />
+    <button class="btn btn-primary" type="submit" style="margin: 11px">Save</button>
+</form>
+<h1 style="font-size: 25px;text-align: left;margin-left: 25px;margin-top: 20px;">Your contacts</h1>
+<div class="container">
+    <div class="table-responsive" style="width: 700px;">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th style="width: 70px;">Sr. No.</th>
+                    <th style="width: 150px;">Name</th>
+                    <th style="width: 250px;">Number</th>
+                    <th style="width: 250px;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in all_data %}
+                <tr>
+                    <td style="width: 70px;">{{ loop.index }}</td>
+                    <td style="width: 150px;">{{ i[0] }}</td>
+                    <td style="width: 250px;">{{ i[1] }}</td>
+                    <td style="width: 250px;">
+                        <a class="btn btn-primary" role="button" href="/update/{{ i[0] }}">Update</a>
+                        <a class="btn btn-primary" role="button" href="/delete/{{ i[0] }}">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<script src="/static/js/bootstrap.min.js"></script>
+
+{% endblock body %}

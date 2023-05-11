@@ -1,79 +1,164 @@
-from flask import Flask, render_template, request, redirect, jsonify
-import sqlite3
-
-class Contacts:
-    def __init__(self):
-        self.__my_conn = sqlite3.connect('db/contacts.db')
-        self.__my_curr = self.__my_conn.cursor()
-    
-    def put_data(self, name:str, number:int) -> None:
-        self.__my_curr.execute(f'insert into identity values ("{name}", {number})')
-        self.__my_conn.commit()
-
-    def get_all_data(self) -> list:
-        self.__my_curr.execute('select * from identity')
-        return self.__my_curr.fetchall()
-    
-    def get_data_from_name(self, name:str) -> int:
-        self.__my_curr.execute(f'select number from identity where name="{name}"')
-        return self.__my_curr.fetchone()
-    
-    def delete_data_from_name(self, name:str) -> None:
-        self.__my_curr.execute(f'delete from identity where name="{name}"')
-        self.__my_conn.commit()
-
-    def update_data(self, name:str, number:int) -> None:
-        self.__my_curr.execute(f'update identity set number={number} where name="{name}"')
-        self.__my_conn.commit()
-
-    def close_connection(self) -> None:
-        self.__my_conn.close()
+"""
+Simple contacts web app using flask and sqlite3 database to store the contacts
+"""
+import hashlib
+from flask import Flask, render_template, request, redirect
+from db_con import ConnectionClass
 
 app = Flask(__name__)
 
+
 @app.route('/', methods=['GET', 'POST'])
 def home_page():
-    if request.method == 'GET':
-        obj = Contacts()
-        all_data = obj.get_all_data()
-        obj.close_connection()
+    """
+    The home page with request method
+    """
+    return render_template('index.html')
 
-        return render_template('index.html', all_data=all_data)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login_page():
+    global login_cred
+    
+    if request.method == 'GET':
+        if login_cred is not None:
+            return redirect('/contacts')
+        else:
+            return render_template('login.html')
+
+    elif request.method == 'POST':
+        email = request.form.get('email')
+        password = get_hash_from_password(request.form.get('password'))
+        print(email, password)
+
+        login_cred = db_con.user_login_with_email(email, password)
+        print(login_cred)
+        if login_cred is not None:
+            print('User logged in')
+            return redirect('/contacts')
+
+        else:
+            print('User not logged in')
+            return render_template('login.html', login_error='Wrong login credentials')
+
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup_page():
+    global login_cred
+    
+    if request.method == 'GET':
+        if login_cred is not None:
+            return redirect('/contacts')
+        else:
+            return render_template('signup.html')
 
     elif request.method == 'POST':
         name = request.form.get('name')
-        number = request.form.get('number')
-        obj = Contacts()
-        obj.put_data(name, number)
-        obj.close_connection()
+        email = request.form.get('email')
+        password = get_hash_from_password(request.form.get('password'))
+        unique_id = get_unique_id_from_data(name, email, password)
 
-        return redirect('/')
+        print(unique_id, name, email, password)
+
+        if db_con.check_whether_email_exists(email):
+            print('Email already exists')
+            return render_template('signup.html', signup_error='Email already exists')
+
+        else:
+            print('New user')
+            login_cred = (unique_id, name, email, password)
+            db_con.user_signup_with_email(unique_id, name, email, password)
+            return redirect('/contacts')
+
+
+@app.route('/contacts')
+def contacts_page():
+    global login_cred
+    
+    if login_cred is None:
+        return redirect('/login')
+    
+    return render_template('contacts.html', user_name=login_cred[1])
+
+@app.route('/logout')
+def user_logout():
+    global login_cred
+    
+    login_cred = None
+    return redirect('/')
+
+
+@app.route('/error')
+def error_page():
+    return render_template('error.html')
+
 
 @app.route('/delete/<string:name>')
-def delete_data(name):  
-    obj = Contacts()
-    obj.delete_data_from_name(name)
-    obj.close_connection()
+def delete_data(name):
+    """
+    The delete page with name as the parameter
+    """
+
+    db_con.delete_data_from_name(name)
 
     return redirect('/')
 
+
 @app.route('/update/<string:name>', methods=['GET', 'POST'])
 def update_data(name):
+    """
+    The update page with name as the parameter
+    """
     if request.method == 'GET':
-        obj = Contacts()
-        number = obj.get_data_from_name(name)[0]
-        obj.close_connection()
+
+        number = db_con.get_data_from_name(name)
 
         return render_template('update.html', name=name, number=number)
-    
+
     elif request.method == 'POST':
-        number = request.form.get('number')
-        obj = Contacts()
-        obj.update_data(name, number)
-        obj.close_connection()
+        number = int(request.form.get('number'))
+        print(number, type(number))
+
+        db_con.update_data(name, number)
 
         return redirect('/')
 
 
+def get_unique_id_from_data(name, email, password):
+    """
+    Generate the unique id for the credentials
+    """
+    return hashlib.sha1((name + email + password).encode()).hexdigest()
+
+
+def get_hash_from_password(password: str) -> str:
+    """
+    Get the hash from the password
+
+    Args:
+        password (str): The password of the user
+
+    Returns:
+        str: The hash of the password
+    """
+    return hashlib.sha256(password.encode()).hexdigest()
+
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    print('Connecting to the database...')
+    db_con = ConnectionClass()
+
+    if db_con.check_connection():
+        print('Connected to the database')
+        
+        # Global variable to store the login credentials
+        # in the form of a (unique_id, name, email, password) tuple
+        login_cred = None
+
+        app.run(debug=True, host='0.0.0.0', port=5000)
+
+        db_con.close_connection()
+        print('Connection closed')
+
+    else:
+        print('Not connected to the database')
