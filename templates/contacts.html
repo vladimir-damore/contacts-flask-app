@@ -7,7 +7,7 @@
     <title>Contacts</title>
     <link rel="stylesheet" href="static/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="static/fonts/typicons.min.css">
-    <link rel="stylesheet" href="static/css/Navbar-Right-Links-icons.css">
+    <link rel="stylesheet" href="static/css/style.css">
 </head>
 
 <body>
@@ -22,18 +22,18 @@
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"></li>
                 </ul><small style="margin-right: 15px;font-size: 15px;">Hello {{ user_name }}</small><a
-                    class="btn btn-primary ms-md-2" role="button" href="/logout"
-                    style="transform: scale(1);">Logout</a>
+                    class="btn btn-primary ms-md-2" role="button" href="/logout" style="transform: scale(1);">Logout</a>
             </div>
         </div>
     </nav>
     <h1 style="text-align: center;margin: 10px;">My Contacts App</h1>
-    <form method="post" action="/contacts"><label class="form-label"
-            style="margin: 15px;margin-left: 15px;text-align: left;">Name</label><input class="form-control" type="text"
-            style="width: 200px;margin: 0px;margin-left: 15px;" name="name"><label class="form-label"
-            style="margin: 15px;">Number</label><input class="form-control" type="number"
-            style="width: 200px;margin-left: 15px;" name="number"><button class="btn btn-primary" type="submit"
-            style="margin: 11px;">Save</button></form>
+    <form method="post" action="/contacts">
+        <label class="form-label" style="margin: 15px;margin-left: 15px;text-align: left;">Name</label>
+        <input class="form-control" type="text" style="width: 200px;margin: 0px;margin-left: 15px;" name="name">
+        <label class="form-label" style="margin: 15px;">Number</label>
+        <input class="form-control" type="number" style="width: 200px;margin-left: 15px;" name="number">
+        <button class="btn btn-primary" type="submit" style="margin: 11px;">Save</button>
+    </form>
     <h1 class="text-center" style="font-size: 25px;text-align: center;margin-left: 25px;margin-top: 20px;width: 300px;">
         Your contacts</h1>
     <div class="container">
@@ -48,14 +48,17 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% for i in all_contacts %}
                     <tr>
-                        <td style="width: 70px;">Cell 1</td>
-                        <td style="width: 150px;">Cell 1</td>
-                        <td style="width: 250px;">Cell 2</td>
-                        <td style="width: 250px;"><a class="btn btn-primary" role="button" href="update.html"
-                                style="margin-right: 5px;margin-left: 5px;">Update</a><a class="btn btn-primary"
-                                role="button" href="/delete">Delete</a></td>
+                        <td style="width: 70px;">{{ loop.index }}</td>
+                        <td style="width: 150px;">{{ i[1] }}</td>
+                        <td style="width: 250px;">{{ i[2] }}</td>
+                        <td style="width: 250px;">
+                            <a class="btn btn-primary" role="button" href="">Update</a>
+                            <a class="btn btn-primary" role="button" href="">Delete</a>
+                        </td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>

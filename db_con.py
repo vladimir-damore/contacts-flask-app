@@ -1,10 +1,7 @@
 """The database connection class for the contacts database"""
 
-import mysql.connector
-import dotenv
-
-env_vars = dotenv.dotenv_values()
-
+import sqlite3
+from datetime import date
 
 class ConnectionClass:
     """
@@ -12,44 +9,52 @@ class ConnectionClass:
     """
 
     def __init__(self):
-        self.__my_conn = mysql.connector.connect(host=env_vars['DB_HOST'],
-                                                 user=env_vars['DB_USER'],
-                                                 password=env_vars['DB_PASSWORD'],
-                                                 database=env_vars['DB_DATABASE'],
-                                                 port=env_vars['DB_PORT'])
+        self.__my_conn = sqlite3.connect(
+            database=r'db\filestore.db', check_same_thread=False)  # 'filestore.db
         self.__my_curr = self.__my_conn.cursor()
 
-    def user_login_with_email(self, email: str, password: str):
+    def user_login_with_user_email(self, email: str, password: str) -> list:
+        """Returns the user data if the user exists in the database"""
+
         self.__my_curr.execute(
             'select * from login where email="{}" and password="{}"'.format(email, password))
         return self.__my_curr.fetchone()
 
-    def check_whether_email_exists(self, email: str) -> bool:
+    def check_whether_user_email_exists(self, email: str) -> bool:
+        """Returns True if the email exists in the database else False"""
+
         self.__my_curr.execute(
             'select * from login where email="{}"'.format(email))
         return True if self.__my_curr.fetchone() else False
 
-    def user_signup_with_email(self, unique_id: str, name: str, email: str, password: str):
-        self.__my_curr.execute('insert into login values ("{}", "{}", "{}", "{}")'.format(
-            unique_id, name, email, password))
-        self.__my_conn.commit()
+    def user_signup_with_user_email(self, unique_id: str, name: str, email: str, password: str) -> bool:
+        """Function to signup the user with the email and password"""
 
-    def put_data(self, name: str, number: int) -> None:
+        try:
+            self.__my_curr.execute('insert into login values ("{}", "{}", "{}", "{}")'.format(
+                unique_id, name, email, password))
+            self.__my_conn.commit()
+
+            return True
+        except sqlite3.Error:
+            return False
+
+    def user_save_contact(self, unique_id: str, name: str, number: int) -> None:
         """ 
         Put name and number into the database
         """
         self.__my_curr.execute(
-            f'insert into identity values ("{name}", {number})')
+            'insert into contact values ("{}", "{}", {}, "{}")'.format(unique_id, name, number, date.today()))
         self.__my_conn.commit()
 
-    def get_all_data(self) -> list:
+    def get_all_contacts_of_user(self, unique_id: str) -> list:
         """
         Get all the data from the database and return it
 
         Returns:
             list: The list of all the data
         """
-        self.__my_curr.execute('select * from contact')
+        self.__my_curr.execute('select * from contact where id="{}"'.format(unique_id))
         return self.__my_curr.fetchall()
 
     def get_data_from_name(self, name: str) -> int:
@@ -63,7 +68,7 @@ class ConnectionClass:
             int: The number of the person
         """
         self.__my_curr.execute(
-            f'select number from identity where name="{name}"')
+            f'select number from contacts where name="{name}"')
         return self.__my_curr.fetchone()[0]
 
     def delete_data_from_name(self, name: str) -> None:
@@ -73,7 +78,7 @@ class ConnectionClass:
         Args:
             name (str): The name of the person
         """
-        self.__my_curr.execute(f'delete from identity where name="{name}"')
+        self.__my_curr.execute(f'delete from contacts where name="{name}"')
         self.__my_conn.commit()
 
     def update_data(self, name: str, number: int) -> None:
@@ -85,7 +90,7 @@ class ConnectionClass:
             number (int): The number of the person
         """
         self.__my_curr.execute(
-            f'update identity set number={number} where name="{name}"')
+            f'update contacts set number={number} where name="{name}"')
         self.__my_conn.commit()
 
     def close_connection(self) -> None:
@@ -93,12 +98,3 @@ class ConnectionClass:
         Close the connection
         """
         self.__my_conn.close()
-
-    def check_connection(self) -> bool:
-        """
-        Check if the connection is established
-
-        Returns:
-            bool: True if the connection is established, else False
-        """
-        return self.__my_conn.is_connected()
