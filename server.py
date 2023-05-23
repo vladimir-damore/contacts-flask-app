@@ -2,160 +2,171 @@
 Simple contacts web app using flask and sqlite3 database to store the contacts
 """
 import hashlib
+
 # import logging
 from flask import Flask, render_template, request, redirect, session
 from db_con import ConnectionClass
 
 app = Flask(__name__)
-app.secret_key = '12345'
+app.secret_key = "12345"
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route("/", methods=["GET", "POST"])
 def home_page():
     """
     The home page with request method
     """
-    session.pop('user_unique_id', None)
-    session.pop('user_name', None)
+    session.pop("user_unique_id", None)
+    session.pop("user_name", None)
 
-    return render_template('index.html')
+    return render_template("index.html")
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route("/login", methods=["GET", "POST"])  # type: ignore
 def login_page():
     """
-        The login page with the request method GET and POST and the login credentials
-        It has following features:
-        1. If the user is already logged in then it redirects to the contacts page
-        2. If the user is not logged in then it redirects to the login page
-        3. If the user is not logged in and the login credentials are wrong then it shows the error
-        4. Stores the user data in the session
+    The login page with the request method GET and POST and the login credentials
+    It has following features:
+    1. If the user is already logged in then it redirects to the contacts page
+    2. If the user is not logged in then it redirects to the login page
+    3. If the user is not logged in and the login credentials are wrong then it shows the error
+    4. Stores the user data in the session
     """
-    
-    if request.method == 'GET':
-        user_unique_id = session.get('user_unique_id')
-        user_name = session.get('user_name')
+
+    if request.method == "GET":
+        user_unique_id = session.get("user_unique_id")
+        user_name = session.get("user_name")
 
         if user_unique_id is not None:
-            return redirect('/contacts')
-        
-        return render_template('login.html', login_error='')
+            return redirect("/contacts")
 
-    elif request.method == 'POST':
-        user_email = request.form.get('email')
-        user_password = request.form.get('password')
+        return render_template("login.html", login_error="")
+
+    elif request.method == "POST":
+        user_email = request.form.get("email")
+        user_password = request.form.get("password")
         print(user_email, user_password)
 
-        if user_email == '' or user_password == '':
-            print('[+] User email or password cannot be empty')
-            return render_template('login.html', login_error='User email or password cannot be empty')
+        if user_email == "" or user_password == "":
+            print("[+] User email or password cannot be empty")
+            return render_template(
+                "login.html", login_error="User email or password cannot be empty"
+            )
 
-        login_cred = DB_CON.user_login_with_user_email(user_email, user_password)
+        login_cred = DB_CON.user_login_with_user_email(user_email, user_password)  # type: ignore
         print(login_cred)
 
         if login_cred is None:
-            print('[+] Wrong login credentials given by user {}'.format(user_email))
-            return render_template('login.html', login_error='Wrong login credentials')
+            print("[+] Wrong login credentials given by user {}".format(user_email))
+            return render_template("login.html", login_error="Wrong login credentials")
 
         user_unique_id = login_cred[0]
         user_name = login_cred[1]
         user_email = login_cred[2]
 
-        session['user_unique_id'] = user_unique_id
-        session['user_name'] = user_name
+        session["user_unique_id"] = user_unique_id
+        session["user_name"] = user_name
 
-        print('[+] User {} successfully logged in'.format(user_email))
-        return redirect('/contacts')
+        print("[+] User {} successfully logged in".format(user_email))
+        return redirect("/contacts")
 
 
-@app.route('/signup', methods=['GET', 'POST'])
+@app.route("/signup", methods=["GET", "POST"])  # type: ignore
 def signup_page():
     """
-        The signup page with the request method GET and POST and the signup credentials
-        It has following features:
-        1. If the user is already logged in then it redirects to the contacts page
-        2. If the user is not logged in then it redirects to the signup page
-        3. If the user is not logged in and the signup credentials are wrong then it shows the error
-        4. Checks whether the user_email already exists in the database
-        5. Stores the user data in the session
+    The signup page with the request method GET and POST and the signup credentials
+    It has following features:
+    1. If the user is already logged in then it redirects to the contacts page
+    2. If the user is not logged in then it redirects to the signup page
+    3. If the user is not logged in and the signup credentials are wrong then it shows the error
+    4. Checks whether the user_email already exists in the database
+    5. Stores the user data in the session
     """
-    
-    
-    user_unique_id = session.get('user_unique_id')
-    user_name = session.get('user_name')
-    
-    if request.method == 'GET':
+
+    user_unique_id = session.get("user_unique_id")
+    user_name = session.get("user_name")
+
+    if request.method == "GET":
         if user_unique_id is not None:
-            return redirect('/contacts')
-        
-        return render_template('signup.html', signup_error='')
+            return redirect("/contacts")
 
-    elif request.method == 'POST':
-        user_name = request.form.get('name')
-        user_email = request.form.get('email')
-        user_password = request.form.get('password')
+        return render_template("signup.html", signup_error="")
 
-        if user_email == '' or user_password == '':
-            print('[+] User email or password cannot be empty')
-            return render_template('signup.html', signup_error='Email or password cannot be empty')
-        
+    elif request.method == "POST":
+        user_name = request.form.get("name")
+        user_email = request.form.get("email")
+        user_password = request.form.get("password")
+
+        if user_email == "" or user_password == "":
+            print("[+] User email or password cannot be empty")
+            return render_template(
+                "signup.html", signup_error="Email or password cannot be empty"
+            )
+
         if DB_CON.check_whether_user_email_exists(user_email):
-            print('[+] Email {} already exists'.format(user_email))
-            return render_template('signup.html', signup_error='Email already exists')
-        
-        user_unique_id = get_user_unique_id_from_data(user_name, user_email, user_password)
+            print("[+] Email {} already exists".format(user_email))
+            return render_template("signup.html", signup_error="Email already exists")
+
+        user_unique_id = get_user_unique_id_from_data(
+            user_name, user_email, user_password
+        )
         print(user_unique_id, user_name, user_email, user_password)
 
-        print('[+] New user {} signed up'.format(user_email))
-        
-        session['user_unique_id'] = user_unique_id
-        session['user_name'] = user_name
-        
-        DB_CON.user_signup_with_user_email(user_unique_id, user_name, user_email, user_password)
-        return redirect('/contacts')
+        print("[+] New user {} signed up".format(user_email))
+
+        session["user_unique_id"] = user_unique_id
+        session["user_name"] = user_name
+
+        DB_CON.user_signup_with_user_email(
+            user_unique_id, user_name, user_email, user_password
+        )
+        return redirect("/contacts")
 
 
-@app.route('/contacts', methods=['GET', 'POST'])
+@app.route("/contacts", methods=["GET", "POST"])
 def contacts_page():
     """The contacts page with the user_name of the user and all the contacts displayed"""
-    
-    user_unique_id = session.get('user_unique_id')
-    user_name = session.get('user_name')
 
-    if request.method == 'GET':
+    user_unique_id = session.get("user_unique_id")
+    user_name = session.get("user_name")
+
+    if request.method == "GET":
         if user_unique_id is None:
-            return redirect('/login')
+            return redirect("/login")
 
         all_contacts = DB_CON.get_all_contacts_of_user(user_unique_id)
-        return render_template('contacts.html', user_name=user_name, all_contacts=all_contacts)
+        return render_template(
+            "contacts.html", user_name=user_name, all_contacts=all_contacts
+        )
 
-    elif request.method == 'POST':
-        contact_name = request.form.get('name')
-        contact_number = int(request.form.get('number'))
+    elif request.method == "POST":
+        contact_name = request.form.get("name")
+        contact_number = int(request.form.get("number"))
         print(contact_name, contact_number)
 
         DB_CON.user_save_contact(user_unique_id, contact_name, contact_number)
 
-        return redirect('/contacts')
+        return redirect("/contacts")
 
-@app.route('/logout')
+
+@app.route("/logout")
 def user_logout():
     """User logout function which pops the session data and redirects to the home page"""
-    
-    session.pop('user_unique_id', None)
-    session.pop('user_name', None)
 
-    return redirect('/')
+    session.pop("user_unique_id", None)
+    session.pop("user_name", None)
+
+    return redirect("/")
 
 
-@app.route('/error')
+@app.route("/error")
 def error_page():
     """The error page with the error message"""
-    
-    return render_template('error.html')
+
+    return render_template("error.html")
 
 
-@app.route('/delete/<string:user_name>')
+@app.route("/delete/<string:user_name>")
 def delete_data(user_name):
     """
     The delete page with user_name as the parameter
@@ -163,27 +174,26 @@ def delete_data(user_name):
 
     DB_CON.delete_data_from_user_name(user_name)
 
-    return redirect('/')
+    return redirect("/")
 
 
-@app.route('/update/<string:user_name>', methods=['GET', 'POST'])
+@app.route("/update/<string:user_name>", methods=["GET", "POST"])
 def update_data(user_name):
     """
     The update page with user_name as the parameter
     """
-    if request.method == 'GET':
-
+    if request.method == "GET":
         number = DB_CON.get_data_from_user_name(user_name)
 
-        return render_template('update.html', user_name=user_name, number=number)
+        return render_template("update.html", user_name=user_name, number=number)
 
-    elif request.method == 'POST':
-        number = int(request.form.get('number'))
+    elif request.method == "POST":
+        number = int(request.form.get("number"))
         print(number, type(number))
 
         DB_CON.update_data(user_name, number)
 
-        return redirect('/')
+        return redirect("/")
 
 
 def get_user_unique_id_from_data(user_name, user_email, user_password):
@@ -207,7 +217,7 @@ def get_hash_from_user_password(user_password: str) -> str:
 
 
 DB_CON = ConnectionClass()
-print('Connected to the database')
+print("Connected to the database")
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=5000)

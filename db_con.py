@@ -10,7 +10,7 @@ class ConnectionClass:
 
     def __init__(self):
         self.__my_conn = sqlite3.connect(
-            database=r'db\filestore.db', check_same_thread=False)  # 'filestore.db
+            database='db/filestore.db', check_same_thread=False)  # 'filestore.db
         self.__my_curr = self.__my_conn.cursor()
 
     def user_login_with_user_email(self, email: str, password: str) -> list:

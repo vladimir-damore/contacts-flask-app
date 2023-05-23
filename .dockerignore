@@ -1,5 +1,5 @@
-flenv/
 __pycache__/
+.venv/
 .git/
 .gitignore
 README.md
