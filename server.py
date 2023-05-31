@@ -3,12 +3,21 @@ Simple contacts web app using flask and sqlite3 database to store the contacts
 """
 import hashlib
 
+import dotenv
 # import logging
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, redirect, render_template, request, session
+
 from db_con import ConnectionClass
 
+# Check if the .env file exists
+if dotenv.load_dotenv():
+    ENV = dotenv.dotenv_values()
+else:
+    print("Error loading .env file")
+    exit(1)
+
 app = Flask(__name__)
-app.secret_key = "12345"
+app.secret_key = ENV["SECRET_KEY"]
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -103,7 +112,7 @@ def signup_page():
                 "signup.html", signup_error="Email or password cannot be empty"
             )
 
-        if DB_CON.check_whether_user_email_exists(user_email):
+        if DB_CON.check_whether_user_email_exists(user_email): # type: ignore
             print("[+] Email {} already exists".format(user_email))
             return render_template("signup.html", signup_error="Email already exists")
 
@@ -118,12 +127,12 @@ def signup_page():
         session["user_name"] = user_name
 
         DB_CON.user_signup_with_user_email(
-            user_unique_id, user_name, user_email, user_password
+            user_unique_id, user_name, user_email, user_password # type: ignore
         )
         return redirect("/contacts")
 
 
-@app.route("/contacts", methods=["GET", "POST"])
+@app.route("/contacts", methods=["GET", "POST"]) # type: ignore
 def contacts_page():
     """The contacts page with the user_name of the user and all the contacts displayed"""
 
@@ -141,7 +150,7 @@ def contacts_page():
 
     elif request.method == "POST":
         contact_name = request.form.get("name")
-        contact_number = int(request.form.get("number"))
+        contact_number = int(request.form.get("number")) # type: ignore
         print(contact_name, contact_number)
 
         DB_CON.user_save_contact(user_unique_id, contact_name, contact_number)
@@ -177,7 +186,7 @@ def delete_data(user_name):
     return redirect("/")
 
 
-@app.route("/update/<string:user_name>", methods=["GET", "POST"])
+@app.route("/update/<string:user_name>", methods=["GET", "POST"]) # type: ignore
 def update_data(user_name):
     """
     The update page with user_name as the parameter
@@ -188,7 +197,7 @@ def update_data(user_name):
         return render_template("update.html", user_name=user_name, number=number)
 
     elif request.method == "POST":
-        number = int(request.form.get("number"))
+        number = int(request.form.get("number")) # type: ignore
         print(number, type(number))
 
         DB_CON.update_data(user_name, number)

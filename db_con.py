@@ -5,6 +5,7 @@ from datetime import date
 import dotenv
 import mysql.connector
 
+# Check if the .env file exists
 if dotenv.load_dotenv():
     ENV = dotenv.dotenv_values()
 else:
