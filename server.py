@@ -216,8 +216,14 @@ def get_hash_from_user_password(user_password: str) -> str:
     return hashlib.sha256(user_password.encode()).hexdigest()
 
 
+print("Connecting to the database")
+
 DB_CON = ConnectionClass()
-print("Connected to the database")
+
+if DB_CON.check_the_connection():
+    print("Connected to the database")
+else:
+    print("Error connecting to the database")
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
