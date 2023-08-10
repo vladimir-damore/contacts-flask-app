@@ -3,21 +3,12 @@ Simple contacts web app using flask and sqlite3 database to store the contacts
 """
 import hashlib
 
-import dotenv
-# import logging
 from flask import Flask, redirect, render_template, request, session
 
-from db_con import ConnectionClass
-
-# Check if the .env file exists
-if dotenv.load_dotenv():
-    ENV = dotenv.dotenv_values()
-else:
-    print("Error loading .env file")
-    exit(1)
+import db_con
 
 app = Flask(__name__)
-app.secret_key = ENV["SECRET_KEY"]
+app.secret_key = db_con.SECRET_KEY
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -132,6 +123,11 @@ def signup_page():
         return redirect("/contacts")
 
 
+@app.route("/verify", methods=["GET", "POST"]) # type: ignore
+def verify_page():
+    if request.method == "GET":
+        return render_template("verify.html", verify_error="")
+
 @app.route("/contacts", methods=["GET", "POST"]) # type: ignore
 def contacts_page():
     """The contacts page with the user_name of the user and all the contacts displayed"""
@@ -153,7 +149,7 @@ def contacts_page():
         contact_number = int(request.form.get("number")) # type: ignore
         print(contact_name, contact_number)
 
-        DB_CON.user_save_contact(user_unique_id, contact_name, contact_number)
+        DB_CON.user_save_contact(user_unique_id, contact_name, contact_number) # type: ignore
 
         return redirect("/contacts")
 
@@ -227,7 +223,7 @@ def get_hash_from_user_password(user_password: str) -> str:
 
 print("Connecting to the database")
 
-DB_CON = ConnectionClass()
+DB_CON = db_con.ConnectionClass()
 
 if DB_CON.check_the_connection():
     print("Connected to the database")

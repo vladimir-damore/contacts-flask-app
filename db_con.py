@@ -2,15 +2,22 @@
 
 from datetime import date
 
-import dotenv
+import os
 import mysql.connector
 
-# Check if the .env file exists
-if dotenv.load_dotenv():
-    ENV = dotenv.dotenv_values()
+# Importing all environment variables
+# Windows: FOR /F "eol=# tokens=*" %i IN (.env) DO SET %i
+# Linux: export $(cat .env | xargs)
+
+ENV = os.environ
+
+# Check whether all the environment variable are loaded
+if "HOST" in ENV:
+    print("All ENVs are loaded")
+    SECRET_KEY = ENV.get("SECRET_KEY")
 else:
-    print("Error loading .env file")
-    exit(1)
+    print("ENVs are not loaded")
+    exit()
 
 
 class ConnectionClass:
@@ -20,11 +27,11 @@ class ConnectionClass:
 
     def __init__(self):
         self.__my_conn = mysql.connector.connect(
-            host=ENV["HOST"],
-            user=ENV["USER"],
-            password=ENV["PASSWORD"],
-            port=ENV["PORT"],
-            database=ENV["DATABASE"],
+            host=ENV.get("HOST", "").strip(),
+            user=ENV.get("USER", "").strip(),
+            password=ENV.get("PASSWORD", "").strip(),
+            port=int(ENV.get("PORT")),  # type: ignore
+            database=ENV.get("DATABASE", "").strip(),
         )
         self.__my_curr = self.__my_conn.cursor()
 
@@ -37,16 +44,16 @@ class ConnectionClass:
         """Returns the user data if the user exists in the database"""
 
         self.__my_curr.execute(
-            'select * from login where email="{}" and password="{}"'.format(
+            'select id, name, email from login where email="{}" and password="{}"'.format(
                 email, password
             )
         )
-        return self.__my_curr.fetchone() # type: ignore
+        return self.__my_curr.fetchone()  # type: ignore
 
     def check_whether_user_email_exists(self, email: str) -> bool:
         """Returns True if the email exists in the database else False"""
 
-        self.__my_curr.execute('select * from login where email="{}"'.format(email))
+        self.__my_curr.execute('select id from login where email="{}"'.format(email))
         return True if self.__my_curr.fetchone() else False
 
     def user_signup_with_user_email(
@@ -71,7 +78,7 @@ class ConnectionClass:
         Put name and number into the database
         """
         self.__my_curr.execute(
-            'insert into contact values ("{}", "{}", {}, "{}")'.format(
+            'insert into contact (id, name, number, create_date) values ("{}", "{}", {}, "{}")'.format(
                 unique_id, name, number, date.today()
             )
         )
@@ -84,7 +91,9 @@ class ConnectionClass:
         Returns:
             list: The list of all the data
         """
-        self.__my_curr.execute('select * from contact where id="{}"'.format(unique_id))
+        self.__my_curr.execute(
+            'select name, number from contact where id="{}"'.format(unique_id)
+        )
         return self.__my_curr.fetchall()
 
     def get_data_from_name(self, name: str) -> int:
@@ -98,7 +107,7 @@ class ConnectionClass:
             int: The number of the person
         """
         self.__my_curr.execute(f'select number from contacts where name="{name}"')
-        return self.__my_curr.fetchone()[0] # type: ignore
+        return self.__my_curr.fetchone()[0]  # type: ignore
 
     def delete_data_from_name(self, name: str) -> None:
         """
