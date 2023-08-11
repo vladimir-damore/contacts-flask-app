@@ -13,10 +13,10 @@ ENV = os.environ
 
 # Check whether all the environment variable are loaded
 if "HOST" in ENV:
-    print("All ENVs are loaded")
+    print("[+] All ENVs are loaded")
     SECRET_KEY = ENV.get("SECRET_KEY")
 else:
-    print("ENVs are not loaded")
+    print("[+] ENVs are not loaded")
     exit()
 
 
@@ -26,14 +26,19 @@ class ConnectionClass:
     """
 
     def __init__(self):
-        self.__my_conn = mysql.connector.connect(
-            host=ENV.get("HOST", "").strip(),
-            user=ENV.get("USER", "").strip(),
-            password=ENV.get("PASSWORD", "").strip(),
-            port=int(ENV.get("PORT")),  # type: ignore
-            database=ENV.get("DATABASE", "").strip(),
-        )
-        self.__my_curr = self.__my_conn.cursor()
+        try:
+            self.__my_conn = mysql.connector.connect(
+                host=ENV.get("HOST", "").strip(),
+                user=ENV.get("USER", "").strip(),
+                password=ENV.get("PASSWORD", "").strip(),
+                port=int(ENV.get("PORT")),  # type: ignore
+                database=ENV.get("DATABASE", "").strip(),
+            )
+        except mysql.connector.Error as error_name:
+            print("[+] Error", error_name)
+            self.__my_conn = None
+        else:
+            self.__my_curr = self.__my_conn.cursor()
 
     def check_the_connection(self) -> bool:
         """Returns True if the connection is established else False"""
@@ -96,39 +101,41 @@ class ConnectionClass:
         )
         return self.__my_curr.fetchall()
 
-    def get_data_from_name(self, name: str) -> int:
+    def delete_contact_of_user(self, contact_name: str, user_unique_id: str) -> None:
         """
-        Get the number from the database from the name
+        Delete the contact of the user from the database from the name
 
         Args:
-            name (str): The name of the person
-
-        Returns:
-            int: The number of the person
-        """
-        self.__my_curr.execute(f'select number from contacts where name="{name}"')
-        return self.__my_curr.fetchone()[0]  # type: ignore
-
-    def delete_data_from_name(self, name: str) -> None:
-        """
-        Delete the data from the database from the name
-
-        Args:
-            name (str): The name of the person
-        """
-        self.__my_curr.execute(f'delete from contacts where name="{name}"')
-        self.__my_conn.commit()
-
-    def update_data(self, name: str, number: int) -> None:
-        """
-        Update the number from the database from the name
-
-        Args:
-            name (str): The name of the person
-            number (int): The number of the person
+            contact_name (str): The name of the person
+            user_unique_id (str): The unique id of the user
         """
         self.__my_curr.execute(
-            f'update contacts set number={number} where name="{name}"'
+            'delete from contact where name="{}" and id="{}"'.format(
+                contact_name, user_unique_id
+            )
+        )
+        self.__my_conn.commit()
+
+    def update_contact_of_user(
+        self,
+        new_contact_name: str,
+        new_contact_number: int,
+        old_contact_name: str,
+        user_unique_id: str,
+    ) -> None:
+        """
+        Update the details of the contact in the database from the old name and user unique id
+
+        Args:
+            new_contact_name (str): The new name of the contact
+            new_contact_number (int): The new number of the contact
+            old_contact_name (str): The old name of the contact
+            user_unique_id (str): The unique id of the user
+        """
+        self.__my_curr.execute(
+            'update contact set name="{}", number={} where name="{}" and id="{}"'.format(
+                new_contact_name, new_contact_number, old_contact_name, user_unique_id
+            )
         )
         self.__my_conn.commit()
 
@@ -136,4 +143,6 @@ class ConnectionClass:
         """
         Close the connection
         """
+        self.__my_curr.close()
         self.__my_conn.close()
+        print("[+] Connection closed")

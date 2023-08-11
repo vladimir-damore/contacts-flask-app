@@ -12,30 +12,33 @@
 
 <body>
     <nav class="navbar navbar-light navbar-expand-md py-3">
-        <div class="container"><a class="navbar-brand d-flex align-items-center"><span
-                    class="bs-icon-sm bs-icon-rounded bs-icon-primary d-flex justify-content-center align-items-center me-2 bs-icon"
-                    style="background: var(--bs-gray);"><i class="typcn typcn-contacts"></i></span><span>Contacts
-                    App</span></a><button data-bs-toggle="collapse" class="navbar-toggler"
-                data-bs-target="#navcol-2"><span class="visually-hidden">Toggle navigation</span><span
-                    class="navbar-toggler-icon"></span></button>
+        <div class="container"><a class="navbar-brand d-flex align-items-center"><span class="bs-icon-sm bs-icon-rounded bs-icon-primary d-flex justify-content-center align-items-center me-2 bs-icon" style="background: var(--bs-gray);"><i class="typcn typcn-contacts"></i></span><span>Contacts App</span></a><button data-bs-toggle="collapse" class="navbar-toggler" data-bs-target="#navcol-2"><span class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
             <div class="collapse navbar-collapse" id="navcol-2">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"></li>
-                </ul><small style="margin-right: 15px;font-size: 15px;">Hello {{ user_name }}</small><a
-                    class="btn btn-primary ms-md-2" role="button" href="/logout" style="transform: scale(1);">Logout</a>
+                </ul>
+                <small style="margin-right: 15px;font-size: 15px;">Hello {{ user_name }}</small>
+                <a class="btn btn-primary ms-md-2" role="button" href="/logout" style="transform: scale(1);">Logout</a>
             </div>
         </div>
     </nav>
     <h1 style="text-align: center;margin: 10px;">My Contacts App</h1>
-    <form method="post" action="/contacts">
-        <label class="form-label" style="margin: 15px;margin-left: 15px;text-align: left;">Name</label>
-        <input class="form-control" type="text" style="width: 200px;margin: 0px;margin-left: 15px;" name="name">
-        <label class="form-label" style="margin: 15px;">Number</label>
-        <input class="form-control" type="number" style="width: 200px;margin-left: 15px;" name="number">
-        <button class="btn btn-primary" type="submit" style="margin: 11px;">Save</button>
+    <form method="post" action="/contacts" style="margin-left: 100px;">
+        <label class="form-label" style="margin: 15px;margin-left: 0;text-align: left;">Name</label>
+        <input class="form-control" type="text" name="name" style="width: 200px;margin-left: 0;border-color: rgb(0,0,0);">
+        <label class="form-label" style="margin: 15px;margin-left: 0;">Number</label>
+        <div class="container" style="padding: 0px;margin: 0px;">
+            <div class="row" style="margin: 0px;padding: 0px;height: 40px;">
+                <div class="col-md-6 col-xxl-2" style="width: 200px;height: 40px;padding: 0px;">
+                    <input class="form-control" type="number" name="number" style="width: 200px;margin-left: 0;border-color: rgb(0,0,0);">
+                </div>
+                <div class="col-md-6 col-xxl-1" style="padding-left: 35px;">
+                    <button class="btn btn-primary" type="submit">Save</button>
+                </div>
+            </div>
+        </div>
     </form>
-    <h1 class="text-center" style="font-size: 25px;text-align: center;margin-left: 25px;margin-top: 20px;width: 300px;">
-        Your contacts</h1>
+    <h1 class="text-center" style="font-size: 25px;text-align: center;margin-left: 25px;margin-top: 20px;width: 300px;">Your contacts</h1>
     <div class="container">
         <div class="table-responsive" style="width: 700px;">
             <table class="table">
@@ -47,19 +50,30 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for i in all_contacts %}
-                    <tr>
+                <tbody> {% for i in all_contacts %} <tr>
                         <td style="width: 70px;">{{ loop.index }}</td>
                         <td style="width: 150px;">{{ i[0] }}</td>
                         <td style="width: 250px;">{{ i[1] }}</td>
-                        <td style="width: 250px;">
-                            <a class="btn btn-primary" role="button" href="">Update</a>
-                            <a class="btn btn-primary" role="button" href="">Delete</a>
+                        <td style="width: 600px;">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-md-6 col-xxl-3" style="margin: 0px;padding: 0px;">
+                                        <form action="/update" method="get">
+                                            <input class="form-control" type="hidden" name="contact_name" value="{{ i[0] }}" />
+                                            <input class="form-control" type="hidden" name="contact_number" value="{{ i[1] }}" />
+                                            <button class="btn btn-primary" type="submit">Update</button>
+                                        </form>
+                                    </div>
+                                    <div class="col-md-6 col-xxl-3">
+                                        <form action="/delete" method="post">
+                                            <input class="form-control" type="hidden" name="contact_name" value="{{ i[0] }}" />
+                                            <button class="btn btn-primary" type="submit">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
                         </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
+                    </tr> {% endfor %} </tbody>
             </table>
         </div>
     </div>

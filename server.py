@@ -11,7 +11,7 @@ app = Flask(__name__)
 app.secret_key = db_con.SECRET_KEY
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET"])
 def home_page():
     """
     The home page with request method
@@ -45,19 +45,15 @@ def login_page():
     elif request.method == "POST":
         user_email = request.form.get("email")
         user_password = request.form.get("password")
-        print(user_email, user_password)
 
         if user_email == "" or user_password == "":
-            print("[+] User email or password cannot be empty")
             return render_template(
                 "login.html", login_error="User email or password cannot be empty"
             )
 
         login_cred = DB_CON.user_login_with_user_email(user_email, user_password)  # type: ignore
-        print(login_cred)
 
         if login_cred is None:
-            print("[+] Wrong login credentials given by user {}".format(user_email))
             return render_template("login.html", login_error="Wrong login credentials")
 
         user_unique_id = login_cred[0]
@@ -67,7 +63,6 @@ def login_page():
         session["user_unique_id"] = user_unique_id
         session["user_name"] = user_name
 
-        print("[+] User {} successfully logged in".format(user_email))
         return redirect("/contacts")
 
 
@@ -98,37 +93,27 @@ def signup_page():
         user_password = request.form.get("password")
 
         if user_email == "" or user_password == "":
-            print("[+] User email or password cannot be empty")
             return render_template(
                 "signup.html", signup_error="Email or password cannot be empty"
             )
 
-        if DB_CON.check_whether_user_email_exists(user_email): # type: ignore
-            print("[+] Email {} already exists".format(user_email))
+        if DB_CON.check_whether_user_email_exists(user_email):  # type: ignore
             return render_template("signup.html", signup_error="Email already exists")
 
         user_unique_id = get_user_unique_id_from_data(
             user_name, user_email, user_password
         )
-        print(user_unique_id, user_name, user_email, user_password)
-
-        print("[+] New user {} signed up".format(user_email))
 
         session["user_unique_id"] = user_unique_id
         session["user_name"] = user_name
 
         DB_CON.user_signup_with_user_email(
-            user_unique_id, user_name, user_email, user_password # type: ignore
+            user_unique_id, user_name, user_email, user_password  # type: ignore
         )
         return redirect("/contacts")
 
 
-@app.route("/verify", methods=["GET", "POST"]) # type: ignore
-def verify_page():
-    if request.method == "GET":
-        return render_template("verify.html", verify_error="")
-
-@app.route("/contacts", methods=["GET", "POST"]) # type: ignore
+@app.route("/contacts", methods=["GET", "POST"])  # type: ignore
 def contacts_page():
     """The contacts page with the user_name of the user and all the contacts displayed"""
 
@@ -146,10 +131,9 @@ def contacts_page():
 
     elif request.method == "POST":
         contact_name = request.form.get("name")
-        contact_number = int(request.form.get("number")) # type: ignore
-        print(contact_name, contact_number)
+        contact_number = int(request.form.get("number"))  # type: ignore
 
-        DB_CON.user_save_contact(user_unique_id, contact_name, contact_number) # type: ignore
+        DB_CON.user_save_contact(user_unique_id, contact_name, contact_number)  # type: ignore
 
         return redirect("/contacts")
 
@@ -164,41 +148,48 @@ def user_logout():
     return redirect("/")
 
 
-@app.route("/error")
-def error_page():
-    """The error page with the error message"""
-
-    return render_template("error.html")
-
-
-@app.route("/delete/<string:user_name>")
-def delete_data(user_name):
-    """
-    The delete page with user_name as the parameter
-    """
-
-    DB_CON.delete_data_from_user_name(user_name)
-
-    return redirect("/")
-
-
-@app.route("/update/<string:user_name>", methods=["GET", "POST"]) # type: ignore
-def update_data(user_name):
+@app.route("/update", methods=["GET", "POST"])  # type: ignore
+def update_contact_of_user():
     """
     The update page with user_name as the parameter
     """
-    if request.method == "GET":
-        number = DB_CON.get_data_from_user_name(user_name)
+    
+    global old_contact_name, old_contact_number
 
-        return render_template("update.html", user_name=user_name, number=number)
+    user_unique_id = session.get("user_unique_id")
+    user_name = session.get("user_name")
+
+    if request.method == "GET":
+        old_contact_name = request.args.get("contact_name")
+        old_contact_number = request.args.get("contact_number")
+
+        return render_template(
+            "update.html",
+            user_name=user_name,
+            contact_name=old_contact_name,
+            contact_number=old_contact_number,
+        )
 
     elif request.method == "POST":
-        number = int(request.form.get("number")) # type: ignore
-        print(number, type(number))
+        new_contact_name = request.form.get("contact_name")
+        new_contact_number = int(request.form.get("contact_number"))
+        
+        DB_CON.update_contact_of_user(new_contact_name, new_contact_number, old_contact_name, user_unique_id)  # type: ignore
 
-        DB_CON.update_data(user_name, number)
+        return redirect("/contacts")
 
-        return redirect("/")
+
+@app.route("/delete", methods=["POST"])  # type: ignore
+def delete_data():
+    """
+    The delete function which deletes the contact of the user
+    """
+    contact_name = request.form.get("contact_name")
+    user_unique_id = session.get("user_unique_id")
+
+    DB_CON.delete_contact_of_user(contact_name, user_unique_id)  # type: ignore
+
+    return redirect("/contacts")
 
 
 def get_user_unique_id_from_data(user_name, user_email, user_password):
@@ -221,14 +212,17 @@ def get_hash_from_user_password(user_password: str) -> str:
     return hashlib.sha256(user_password.encode()).hexdigest()
 
 
-print("Connecting to the database")
+print("[+] Connecting to the database")
 
 DB_CON = db_con.ConnectionClass()
 
 if DB_CON.check_the_connection():
-    print("Connected to the database")
-else:
-    print("Error connecting to the database")
+    print("[+] Connected to the database")
 
-if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    if __name__ == "__main__":
+        app.run(debug=True, host="0.0.0.0", port=5000, use_reloader=False)
+
+    DB_CON.close_connection()
+
+else:
+    print("[+] Error connecting to the database")
