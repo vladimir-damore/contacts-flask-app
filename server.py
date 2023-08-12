@@ -153,28 +153,26 @@ def update_contact_of_user():
     """
     The update page with user_name as the parameter
     """
-    
-    global old_contact_name, old_contact_number
 
     user_unique_id = session.get("user_unique_id")
     user_name = session.get("user_name")
 
     if request.method == "GET":
-        old_contact_name = request.args.get("contact_name")
-        old_contact_number = request.args.get("contact_number")
+        contact_name = request.args.get("contact_name")
+        contact_number = request.args.get("contact_number")
 
         return render_template(
             "update.html",
             user_name=user_name,
-            contact_name=old_contact_name,
-            contact_number=old_contact_number,
+            contact_name=contact_name,
+            contact_number=contact_number,
         )
 
     elif request.method == "POST":
-        new_contact_name = request.form.get("contact_name")
-        new_contact_number = int(request.form.get("contact_number"))
+        contact_name = request.form.get("contact_name")
+        new_contact_number = int(request.form.get("contact_number")) # type: ignore
         
-        DB_CON.update_contact_of_user(new_contact_name, new_contact_number, old_contact_name, user_unique_id)  # type: ignore
+        DB_CON.update_contact_of_user(new_contact_number, contact_name, user_unique_id)  # type: ignore
 
         return redirect("/contacts")
 

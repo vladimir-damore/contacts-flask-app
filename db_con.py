@@ -118,23 +118,21 @@ class ConnectionClass:
 
     def update_contact_of_user(
         self,
-        new_contact_name: str,
-        new_contact_number: int,
-        old_contact_name: str,
+        new_contact_number: str,
+        contact_name: str,
         user_unique_id: str,
     ) -> None:
         """
-        Update the details of the contact in the database from the old name and user unique id
+        Update the details of the contact in the database from the name and user unique id
 
         Args:
-            new_contact_name (str): The new name of the contact
             new_contact_number (int): The new number of the contact
-            old_contact_name (str): The old name of the contact
+            contact_name (str): The name of the contact
             user_unique_id (str): The unique id of the user
         """
         self.__my_curr.execute(
-            'update contact set name="{}", number={} where name="{}" and id="{}"'.format(
-                new_contact_name, new_contact_number, old_contact_name, user_unique_id
+            'update contact set number={} where name="{}" and id="{}"'.format(
+                new_contact_number, contact_name, user_unique_id
             )
         )
         self.__my_conn.commit()

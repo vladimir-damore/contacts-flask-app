@@ -41,7 +41,8 @@
                     <label class="col-form-label" form="updateCon">Name</label>
                 </div>
                 <div class="col-md-6">
-                    <input class="form-control" form="updateCon" type="text" name="contact_name" value="{{ contact_name }}" style="width: 200px;border-color: rgb(0,0,0);">
+                    <input class="form-control" form="updateCon" type="text" value="{{ contact_name }}" style="width: 200px;border-color: rgb(0,0,0);" disabled="">
+                    <input class="form-control" form="updateCon" type="hidden" name="contact_name" value="{{ contact_name }}">
                 </div>
             </div>
         </div>
