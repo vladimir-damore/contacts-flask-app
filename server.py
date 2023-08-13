@@ -170,8 +170,8 @@ def update_contact_of_user():
 
     elif request.method == "POST":
         contact_name = request.form.get("contact_name")
-        new_contact_number = int(request.form.get("contact_number")) # type: ignore
-        
+        new_contact_number = int(request.form.get("contact_number"))  # type: ignore
+
         DB_CON.update_contact_of_user(new_contact_number, contact_name, user_unique_id)  # type: ignore
 
         return redirect("/contacts")
@@ -218,7 +218,7 @@ if DB_CON.check_the_connection():
     print("[+] Connected to the database")
 
     if __name__ == "__main__":
-        app.run(debug=True, host="0.0.0.0", port=5000, use_reloader=False)
+        app.run(debug=True, host="0.0.0.0", port=5000)
 
     DB_CON.close_connection()
 
