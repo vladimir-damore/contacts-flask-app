@@ -33,6 +33,7 @@ class ConnectionClass:
                 password=ENV.get("PASSWORD", "").strip(),
                 port=int(ENV.get("PORT")),  # type: ignore
                 database=ENV.get("DATABASE", "").strip(),
+                autocommit=True
             )
         except mysql.connector.Error as error_name:
             print("[+] Error", error_name)
