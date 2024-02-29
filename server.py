@@ -150,38 +150,35 @@ def update_contact_of_user():
     The update page with user_name as the parameter
     """
 
-    user_unique_id = session.get("user_unique_id")
-    user_name = session.get("user_name")
-
     if request.method == "GET":
-        contact_name = request.args.get("contact_name")
-        contact_number = request.args.get("contact_number")
+        contact_id = request.args.get("contact_id", "")
+        contact_name, contact_number = DB_CON.get_contact_from_contact_id(contact_id)
 
         return render_template(
             "update.html",
-            user_name=user_name,
+            contact_id=contact_id,
             contact_name=contact_name,
             contact_number=contact_number,
         )
 
     elif request.method == "POST":
-        contact_name = request.form.get("contact_name")
-        new_contact_number = int(request.form.get("contact_number"))  # type: ignore
+        contact_id = request.form.get("contact_id", "")
+        new_contact_name = request.form.get("contact_name", "")
+        new_contact_number = int(request.form.get("contact_number", "0"))
 
-        DB_CON.update_contact_of_user(new_contact_number, contact_name, user_unique_id)  # type: ignore
+        DB_CON.update_contact_of_user(contact_id, new_contact_name, new_contact_number)
 
         return redirect("/contacts")
 
 
-@app.route("/delete", methods=["POST"])  # type: ignore
+@app.route("/delete", methods=["POST"])
 def delete_data():
     """
     The delete function which deletes the contact of the user
     """
-    contact_name = request.form.get("contact_name")
-    user_unique_id = session.get("user_unique_id")
+    contact_id = request.form.get("contact_id", "")
 
-    DB_CON.delete_contact_of_user(contact_name, user_unique_id)  # type: ignore
+    DB_CON.delete_contact(contact_id)
 
     return redirect("/contacts")
 

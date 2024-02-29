@@ -25,7 +25,7 @@ user = ENV.get("USER", "")
 dpwd = ENV.get("PASSWORD", "")
 port = int(ENV.get("PORT"))  # type: ignore
 database = ENV.get("DATABASE", "")
-SECRET_KEY = ENV.get("SECRET_KEY")
+SECRET_KEY = ENV.get("SECRET_KEY", "")
 
 DATABASE_URI = f"mysql://{user}:{dpwd}@{host}:{port}/{database}"
 
@@ -50,10 +50,10 @@ class ConnectionClass:
                 pool_pre_ping=True,
             )
 
+            # Database pool warmup successfully
             for _ in range(self.__engine.pool.size()):
                 conn = self.__engine.connect()
                 conn.close()
-            print("[+] Database pool warmup successful")
 
         except exc.SQLAlchemyError as error_name:
             print("[+] Error", error_name)
@@ -121,7 +121,7 @@ class ConnectionClass:
             )
             conn.commit()
 
-    def get_all_contacts_of_user(self, unique_id: str) -> list:
+    def get_all_contacts_of_user(self, user_id: str) -> list:
         """
         Get all the data from the database and return it
 
@@ -129,46 +129,61 @@ class ConnectionClass:
             list: The list of all the data
         """
         with self.__engine.connect() as conn:
-            stmt = text("select cname, cnumber from contact where lid=:lid")
-            result = conn.execute(stmt, {"lid": unique_id}).fetchall()
+            stmt = text("select cid, cname, cnumber from contact where lid=:lid")
+            result = conn.execute(stmt, {"lid": user_id}).fetchall()
 
         return result  # type: ignore
 
-    def delete_contact_of_user(self, contact_name: str, user_unique_id: str) -> None:
+    def delete_contact(self, contact_id: str) -> None:
         """
         Delete the contact of the user from the database from the name
 
         Args:
-            contact_name (str): The name of the person
-            user_unique_id (str): The unique id of the user
+            contact_id (str): The id of the contact
         """
         with self.__engine.connect() as conn:
-            stmt = text("delete from contact where lname=:lname and lid=:lid")
-            conn.execute(stmt, {"lname": contact_name, "lid": user_unique_id})
+            stmt = text("delete from contact where cid=:cid")
+            conn.execute(stmt, {"cid": contact_id})
             conn.commit()
+
+    def get_contact_from_contact_id(self, contact_id: str) -> tuple:
+        """
+        Get the contact from the contact id
+
+        Args:
+            contact_id (str): The contact id of the contact
+
+        Returns:
+            tuple: The contact data (cid, cname, cnumber)
+        """
+        with self.__engine.connect() as conn:
+            stmt = text("select cname, cnumber from contact where cid=:cid")
+            result = conn.execute(stmt, {"cid": contact_id}).fetchone()
+
+        return result  # type: ignore
 
     def update_contact_of_user(
         self,
-        new_contact_number: str,
-        contact_name: str,
-        user_unique_id: str,
+        contact_id: str,
+        new_contact_name: str,
+        new_contact_number: int,
     ) -> None:
         """
         Update the details of the contact in the database from the name and user unique id
 
         Args:
+            contact_id (str): The id of the contact
             new_contact_number (int): The new number of the contact
             contact_name (str): The name of the contact
-            user_unique_id (str): The unique id of the user
         """
         with self.__engine.connect() as conn:
-            stmt = text("update contact set lnumber=:lnumber where lname=:lname and lid=:lid")
+            stmt = text("update contact set cname=:cname, cnumber=:cnumber where cid=:cid")
             conn.execute(
                 stmt,
                 {
-                    "lnumber": new_contact_number,
-                    "lname": contact_name,
-                    "lid": user_unique_id,
+                    "cid": contact_id,
+                    "cnumber": new_contact_number,
+                    "cname": new_contact_name,
                 },
             )
             conn.commit()
