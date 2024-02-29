@@ -1,7 +1,8 @@
 """
 Simple contacts web app using flask and sqlite3 database to store the contacts
 """
-import hashlib
+
+from secrets import token_hex
 
 from flask import Flask, redirect, render_template, request, session
 
@@ -96,7 +97,7 @@ def signup_page():
         if DB_CON.check_whether_user_email_exists(user_email):  # type: ignore
             return render_template("signup.html", signup_error="Email already exists")
 
-        user_unique_id = get_user_unique_id_from_data(user_name, user_email, user_password)
+        user_unique_id = token_hex(5)
 
         session["user_unique_id"] = user_unique_id
         session["user_name"] = user_name
@@ -126,8 +127,9 @@ def contacts_page():
         if contact_name == "" or contact_number == "":
             return redirect("/contacts")
 
+        contact_unique_id = token_hex(5)
         contact_number = int(contact_number)  # type: ignore
-        DB_CON.user_save_contact(user_unique_id, contact_name, contact_number)  # type: ignore
+        DB_CON.user_save_contact(contact_unique_id, contact_name, contact_number, user_unique_id)  # type: ignore
 
         return redirect("/contacts")
 
@@ -184,37 +186,34 @@ def delete_data():
     return redirect("/contacts")
 
 
-def get_user_unique_id_from_data(user_name, user_email, user_password):
-    """
-    Generate the unique id for the credentials
-    """
-    return hashlib.md5((user_name + user_email + user_password).encode()).hexdigest()
+# def get_user_unique_id_from_data(user_name, user_email, user_password):
+#     """
+#     Generate the unique id for the credentials
+#     """
+#     return hashlib.md5((user_name + user_email + user_password).encode()).hexdigest()
 
 
-def get_hash_from_user_password(user_password: str) -> str:
-    """
-    Get the hash from the user_password
+# def get_hash_from_user_password(user_password: str) -> str:
+#     """
+#     Get the hash from the user_password
 
-    Args:
-        user_password (str): The user_password of the user
+#     Args:
+#         user_password (str): The user_password of the user
 
-    Returns:
-        str: The hash of the user_password
-    """
-    return hashlib.sha256(user_password.encode()).hexdigest()
+#     Returns:
+#         str: The hash of the user_password
+#     """
+#     return hashlib.sha256(user_password.encode()).hexdigest()
 
 
 print("[+] Connecting to the database")
 
 DB_CON = db_con.ConnectionClass()
-
 if DB_CON.check_the_connection():
     print("[+] Connected to the database")
 
     if __name__ == "__main__":
         app.run(debug=True, host="0.0.0.0", port=5000)
-
-    # DB_CON.close_connection()
 
 else:
     print("[+] Error connecting to the database")

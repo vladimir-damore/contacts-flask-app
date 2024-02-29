@@ -2,22 +2,32 @@
 
 from datetime import date
 
-import os
-import mysql.connector
+import dotenv
+from sqlalchemy import create_engine, exc, text
 
 # Importing all environment variables
 # Windows: FOR /F "eol=# tokens=*" %i IN (.env) DO SET %i
 # Linux: export $(cat .env | xargs)
+# Mac: export $(cat .env | xargs)
 
-ENV = os.environ
+dotenv.load_dotenv()
+ENV = dotenv.dotenv_values()
 
 # Check whether all the environment variable are loaded
 if "HOST" in ENV:
     print("[+] All ENVs are loaded")
-    SECRET_KEY = ENV.get("SECRET_KEY")
 else:
     print("[+] ENVs are not loaded")
     exit()
+
+host = ENV.get("HOST", "")
+user = ENV.get("USER", "")
+dpwd = ENV.get("PASSWORD", "")
+port = int(ENV.get("PORT"))  # type: ignore
+database = ENV.get("DATABASE", "")
+SECRET_KEY = ENV.get("SECRET_KEY")
+
+DATABASE_URI = f"mysql://{user}:{dpwd}@{host}:{port}/{database}"
 
 
 class ConnectionClass:
@@ -27,68 +37,89 @@ class ConnectionClass:
 
     def __init__(self):
         try:
-            self.__my_conn = mysql.connector.connect(
-                host=ENV.get("HOST", "").strip(),
-                user=ENV.get("USER", "").strip(),
-                password=ENV.get("PASSWORD", "").strip(),
-                port=int(ENV.get("PORT")),  # type: ignore
-                database=ENV.get("DATABASE", "").strip(),
-                autocommit=True
+            self.__engine = create_engine(
+                DATABASE_URI,
+                connect_args={
+                    "ssl_mode": "VERIFY_IDENTITY",
+                    "ssl": {"ca": "cacert.pem"},
+                },
+                pool_size=5,
+                max_overflow=20,
+                pool_timeout=30,
+                pool_recycle=3600,
+                pool_pre_ping=True,
             )
-        except mysql.connector.Error as error_name:
+
+            for _ in range(self.__engine.pool.size()):
+                conn = self.__engine.connect()
+                conn.close()
+            print("[+] Database pool warmup successful")
+
+        except exc.SQLAlchemyError as error_name:
             print("[+] Error", error_name)
-            self.__my_conn = None
-        else:
-            self.__my_curr = self.__my_conn.cursor()
+            self.__engine = None
 
     def check_the_connection(self) -> bool:
         """Returns True if the connection is established else False"""
 
-        return True if self.__my_conn else False
+        return bool(self.__engine)
 
     def user_login_with_user_email(self, email: str, password: str) -> list:
         """Returns the user data if the user exists in the database"""
 
-        self.__my_curr.execute(
-            'select id, name, email from login where email="{}" and password="{}"'.format(
-                email, password
-            )
-        )
-        return self.__my_curr.fetchone()  # type: ignore
+        with self.__engine.connect() as conn:
+            stmt = text("select lid, lname, lemail from login where lemail=:email and lpassword=:password")
+            result = conn.execute(stmt, {"email": email, "password": password}).fetchone()
+
+        return result  # type: ignore
 
     def check_whether_user_email_exists(self, email: str) -> bool:
         """Returns True if the email exists in the database else False"""
 
-        self.__my_curr.execute('select id from login where email="{}"'.format(email))
-        return True if self.__my_curr.fetchone() else False
+        with self.__engine.connect() as conn:
+            stmt = text("select lid from login where lemail=:email")
+            result = conn.execute(stmt, {"email": email}).fetchone()
 
-    def user_signup_with_user_email(
-        self, unique_id: str, name: str, email: str, password: str
-    ) -> bool:
+        return bool(result)
+
+    def user_signup_with_user_email(self, unique_id: str, name: str, email: str, password: str) -> bool:
         """Function to signup the user with the email and password"""
 
         try:
-            self.__my_curr.execute(
-                'insert into login values ("{}", "{}", "{}", "{}")'.format(
-                    unique_id, name, email, password
+            with self.__engine.connect() as conn:
+                stmt = text("insert into login values (:lid, :lname, :lemail, :lpassword)")
+                conn.execute(
+                    stmt,
+                    {
+                        "lid": unique_id,
+                        "lname": name,
+                        "lemail": email,
+                        "lpassword": password,
+                    },
                 )
-            )
-            self.__my_conn.commit()
-
+                conn.commit()
             return True
-        except mysql.connector.Error:
+
+        except exc.SQLAlchemyError:
             return False
 
-    def user_save_contact(self, unique_id: str, name: str, number: int) -> None:
+    def user_save_contact(self, contact_id: str, name: str, number: int, user_id: str) -> None:
         """
         Put name and number into the database
         """
-        self.__my_curr.execute(
-            'insert into contact (id, name, number, create_date) values ("{}", "{}", {}, "{}")'.format(
-                unique_id, name, number, date.today()
+        with self.__engine.connect() as conn:
+            stmt = text("insert into contact values (:cid, :cname, :cnumber, :lid, :date)")
+            conn.execute(
+                stmt,
+                {
+                    "cid": contact_id,
+                    "cname": name,
+                    "cnumber": number,
+                    "lid": user_id,
+                    "date": date.today(),
+                },
             )
-        )
-        self.__my_conn.commit()
+            conn.commit()
 
     def get_all_contacts_of_user(self, unique_id: str) -> list:
         """
@@ -97,10 +128,11 @@ class ConnectionClass:
         Returns:
             list: The list of all the data
         """
-        self.__my_curr.execute(
-            'select name, number from contact where id="{}"'.format(unique_id)
-        )
-        return self.__my_curr.fetchall()
+        with self.__engine.connect() as conn:
+            stmt = text("select cname, cnumber from contact where lid=:lid")
+            result = conn.execute(stmt, {"lid": unique_id}).fetchall()
+
+        return result  # type: ignore
 
     def delete_contact_of_user(self, contact_name: str, user_unique_id: str) -> None:
         """
@@ -110,12 +142,10 @@ class ConnectionClass:
             contact_name (str): The name of the person
             user_unique_id (str): The unique id of the user
         """
-        self.__my_curr.execute(
-            'delete from contact where name="{}" and id="{}"'.format(
-                contact_name, user_unique_id
-            )
-        )
-        self.__my_conn.commit()
+        with self.__engine.connect() as conn:
+            stmt = text("delete from contact where lname=:lname and lid=:lid")
+            conn.execute(stmt, {"lname": contact_name, "lid": user_unique_id})
+            conn.commit()
 
     def update_contact_of_user(
         self,
@@ -131,17 +161,14 @@ class ConnectionClass:
             contact_name (str): The name of the contact
             user_unique_id (str): The unique id of the user
         """
-        self.__my_curr.execute(
-            'update contact set number={} where name="{}" and id="{}"'.format(
-                new_contact_number, contact_name, user_unique_id
+        with self.__engine.connect() as conn:
+            stmt = text("update contact set lnumber=:lnumber where lname=:lname and lid=:lid")
+            conn.execute(
+                stmt,
+                {
+                    "lnumber": new_contact_number,
+                    "lname": contact_name,
+                    "lid": user_unique_id,
+                },
             )
-        )
-        self.__my_conn.commit()
-
-    def close_connection(self) -> None:
-        """
-        Close the connection
-        """
-        self.__my_curr.close()
-        self.__my_conn.close()
-        print("[+] Connection closed")
+            conn.commit()
