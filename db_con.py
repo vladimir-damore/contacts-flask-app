@@ -2,7 +2,8 @@
 
 from datetime import date
 
-import dotenv
+from dotenv import load_dotenv
+from os import environ
 from sqlalchemy import create_engine, exc, text
 
 # Importing all environment variables
@@ -10,22 +11,21 @@ from sqlalchemy import create_engine, exc, text
 # Linux: export $(cat .env | xargs)
 # Mac: export $(cat .env | xargs)
 
-dotenv.load_dotenv()
-ENV = dotenv.dotenv_values()
+load_dotenv()
 
 # Check whether all the environment variable are loaded
-if "HOST" in ENV:
+if "HOST" in environ:
     print("[+] All ENVs are loaded")
 else:
     print("[+] ENVs are not loaded")
     exit()
 
-host = ENV.get("HOST", "")
-user = ENV.get("USER", "")
-dpwd = ENV.get("PASSWORD", "")
-port = int(ENV.get("PORT"))  # type: ignore
-database = ENV.get("DATABASE", "")
-SECRET_KEY = ENV.get("SECRET_KEY", "")
+host = environ.get("HOST", "")
+user = environ.get("USER", "")
+dpwd = environ.get("PASSWORD", "")
+port = int(environ.get("DPORT"))  # type: ignore
+database = environ.get("DATABASE", "")
+SECRET_KEY = environ.get("SECRET_KEY", "")
 
 DATABASE_URI = f"mysql://{user}:{dpwd}@{host}:{port}/{database}"
 

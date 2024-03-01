@@ -3,4 +3,4 @@ gunicorn
 waitress
 sqlalchemy
 mysqlclient
-pymysql
+python-dotenv
