@@ -5,6 +5,7 @@ from datetime import date
 from os import environ
 
 from dotenv import load_dotenv
+from requests import get
 from sqlalchemy import create_engine, exc, text
 
 # Importing all environment variables
@@ -29,6 +30,11 @@ database = environ.get("DATABASE", "")
 SECRET_KEY = environ.get("SECRET_KEY", "")
 
 DATABASE_URI = f"mysql://{user}:{dpwd}@{host}:{port}/{database}"
+
+# Get the certificates from the curl website and save it in the file
+response = get("https://curl.se/ca/cacert.pem", timeout=5)
+with open("cacert.pem", "w", encoding="utf-8") as file:
+    file.write(response.text)
 
 
 class ConnectionClass:

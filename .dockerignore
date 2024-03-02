@@ -1,6 +1,8 @@
 __pycache__/
 .venv/
 .git/
+.github/workflows/
 .env
-database.sql
 .gitignore
+.deepsource.toml
+database.sql
