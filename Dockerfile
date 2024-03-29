@@ -1,6 +1,7 @@
 FROM python
 
 LABEL maintainer="Harshit M"
+LABEL org.opencontainers.image.source="https://github.com/djharshit/contacts-app"
 
 WORKDIR /home/app/
 

@@ -1,6 +1,8 @@
 flask
 gunicorn
+requests
 waitress
 sqlalchemy
 mysqlclient
 python-dotenv
+sentry-sdk

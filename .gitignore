@@ -1,8 +1,6 @@
 __pycache__/
 .venv/
-.github/workflows/
 .env
 .dockerignore
-.deepsource.toml
 database.sql
 cacert.pem
