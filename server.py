@@ -2,13 +2,13 @@
 Simple contacts web app using flask and sqlite3 database to store the contacts
 """
 
-from secrets import token_hex
 from os import environ
+from secrets import token_hex
 
+import sentry_sdk
 from flask import Flask, redirect, render_template, request, session
 
 import db_con
-import sentry_sdk
 
 sentry_sdk.init(environ.get("SENTRY_DSN"))
 
