@@ -4,7 +4,6 @@ import sys
 from datetime import date
 from os import environ
 
-from dotenv import find_dotenv, load_dotenv
 from requests import get
 from sqlalchemy import create_engine, exc, text
 
@@ -13,15 +12,18 @@ from sqlalchemy import create_engine, exc, text
 # Linux: export $(cat .env | xargs)
 # Mac: export $(cat .env | xargs)
 
-if find_dotenv():
-    load_dotenv()
-
 # Check whether all the environment variable are loaded
 if "HOST" in environ:
     print("[+] All ENVs are loaded")
 else:
     print("[+] ENVs are not loaded")
     sys.exit()
+
+# Loading the ca.pem file
+res = get("https://s3.tebi.io/ggits/ca.pem").text
+with open("ca.pem", "w") as file:
+    file.write(res)
+    print("[+] ca.pem file loaded successfully")
 
 host = environ.get("HOST", "")
 user = environ.get("USER", "")
@@ -31,11 +33,6 @@ database = environ.get("DATABASE", "")
 SECRET_KEY = environ.get("SECRET_KEY", "")
 
 DATABASE_URI = f"mysql://{user}:{dpwd}@{host}:{port}/{database}"
-
-# Get the certificates from the curl website and save it in the file
-response = get("https://curl.se/ca/cacert.pem", timeout=5)
-with open("cacert.pem", "w", encoding="utf-8") as file:
-    file.write(response.text)
 
 
 class ConnectionClass:
@@ -47,15 +44,12 @@ class ConnectionClass:
         try:
             self.__engine = create_engine(
                 DATABASE_URI,
-                connect_args={
-                    "ssl_mode": "VERIFY_IDENTITY",
-                    "ssl": {"ca": "cacert.pem"},
-                },
                 pool_size=5,
-                max_overflow=20,
+                max_overflow=10,
                 pool_timeout=30,
                 pool_recycle=3600,
                 pool_pre_ping=True,
+                connect_args={"autocommit": True, "ssl": {"ssl_ca": "ca.pem"}},
             )
 
             # Database pool warmup successfully

@@ -27,7 +27,7 @@ def home_page():
     return render_template("index.html")
 
 
-@app.route("/login", methods=["GET", "POST"])  # type: ignore
+@app.route("/login", methods=["GET", "POST"])
 def login_page():
     """
     The login page with the request method GET and POST and the login credentials
@@ -54,7 +54,7 @@ def login_page():
         if user_email == "" or user_password == "":
             return render_template("login.html", login_error="User email or password cannot be empty")
 
-        login_cred = DB_CON.user_login_with_user_email(user_email, user_password)  # type: ignore
+        login_cred = DB_CON.user_login_with_user_email(user_email, user_password)
 
         if login_cred is None:
             return render_template("login.html", login_error="Wrong login credentials")
@@ -69,7 +69,7 @@ def login_page():
         return redirect("/contacts")
 
 
-@app.route("/signup", methods=["GET", "POST"])  # type: ignore
+@app.route("/signup", methods=["GET", "POST"])
 def signup_page():
     """
     The signup page with the request method GET and POST and the signup credentials
@@ -98,7 +98,7 @@ def signup_page():
         if user_email == "" or user_password == "":
             return render_template("signup.html", signup_error="Email or password cannot be empty")
 
-        if DB_CON.check_whether_user_email_exists(user_email):  # type: ignore
+        if DB_CON.check_whether_user_email_exists(user_email):
             return render_template("signup.html", signup_error="Email already exists")
 
         user_unique_id = token_hex(5)
@@ -106,11 +106,11 @@ def signup_page():
         session["user_unique_id"] = user_unique_id
         session["user_name"] = user_name
 
-        DB_CON.user_signup_with_user_email(user_unique_id, user_name, user_email, user_password)  # type: ignore
+        DB_CON.user_signup_with_user_email(user_unique_id, user_name, user_email, user_password)
         return redirect("/contacts")
 
 
-@app.route("/contacts", methods=["GET", "POST"])  # type: ignore
+@app.route("/contacts", methods=["GET", "POST"])
 def contacts_page():
     """The contacts page with the user_name of the user and all the contacts displayed"""
 
@@ -132,8 +132,8 @@ def contacts_page():
             return redirect("/contacts")
 
         contact_unique_id = token_hex(5)
-        contact_number = int(contact_number)  # type: ignore
-        DB_CON.user_save_contact(contact_unique_id, contact_name, contact_number, user_unique_id)  # type: ignore
+        contact_number = int(contact_number)
+        DB_CON.user_save_contact(contact_unique_id, contact_name, contact_number, user_unique_id)
 
         return redirect("/contacts")
 
@@ -148,7 +148,7 @@ def user_logout():
     return redirect("/")
 
 
-@app.route("/update", methods=["GET", "POST"])  # type: ignore
+@app.route("/update", methods=["GET", "POST"])
 def update_contact_of_user():
     """
     The update page with user_name as the parameter

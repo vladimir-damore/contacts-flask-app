@@ -3,4 +3,4 @@ __pycache__/
 .env
 .dockerignore
 database.sql
-cacert.pem
+ca.pem
