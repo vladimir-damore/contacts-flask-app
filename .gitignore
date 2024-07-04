@@ -1,3 +1,6 @@
 __pycache__/
-db/
-flenv/
+.venv/
+.env
+.dockerignore
+database.sql
+ca.pem

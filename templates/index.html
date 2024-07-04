@@ -1,43 +1,45 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
 
-{% block body %}
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Contacts</title>
+    <link rel="stylesheet" href="static/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="static/fonts/typicons.min.css">
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
 
-<h1 style="text-align: center;margin: 10px;">Contacts App</h1>
-<form action="/" method="post">
-    <label class="form-label" style="margin: 15px;margin-left: 15px;text-align: left;">Name</label>
-    <input class="form-control" type="text" style="width: 200px;margin: 0px;margin-left: 15px;" name="name" />
-    <label class="form-label" style="margin: 15px;">Number</label>
-    <input class="form-control" type="number" style="width: 200px;margin-left: 15px;" name="number" />
-    <button class="btn btn-primary" type="submit" style="margin: 11px">Save</button>
-</form>
-<h1 style="font-size: 25px;text-align: left;margin-left: 25px;margin-top: 20px;">Your contacts</h1>
-<div class="container">
-    <div class="table-responsive" style="width: 700px;">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th style="width: 70px;">Sr. No.</th>
-                    <th style="width: 150px;">Name</th>
-                    <th style="width: 250px;">Number</th>
-                    <th style="width: 250px;">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for i in all_data %}
-                <tr>
-                    <td style="width: 70px;">{{ loop.index }}</td>
-                    <td style="width: 150px;">{{ i[0] }}</td>
-                    <td style="width: 250px;">{{ i[1] }}</td>
-                    <td style="width: 250px;">
-                        <a class="btn btn-primary" role="button" href="/update/{{ i[0] }}">Update</a>
-                        <a class="btn btn-primary" role="button" href="/delete/{{ i[0] }}">Delete</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-<script src="/static/js/bootstrap.min.js"></script>
+<body>
+    <nav class="navbar navbar-light navbar-expand-md py-3">
+        <div class="container"><a class="navbar-brand d-flex align-items-center"><span
+                    class="bs-icon-sm bs-icon-rounded bs-icon-primary d-flex justify-content-center align-items-center me-2 bs-icon"
+                    style="background: var(--bs-gray);"><i class="typcn typcn-contacts"></i></span><span>Contacts
+                    App</span></a><button data-bs-toggle="collapse" class="navbar-toggler"
+                data-bs-target="#navcol-2"><span class="visually-hidden">Toggle navigation</span><span
+                    class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="navcol-2">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"></li>
+                </ul><a class="btn btn-primary ms-md-2" role="button" href="/login"
+                    style="transform: scale(1);">Login</a><a class="btn btn-primary ms-md-2" role="button"
+                    href="/signup" style="transform: scale(1);">Signup</a>
+            </div>
+        </div>
+    </nav>
+    <h1 style="text-align: center;margin: 0px;margin-top: 20px;">My Contacts App</h1>
+    <p class="fs-6" style="margin-top: 20px;text-align: center;margin-left: 30px;margin-right: 30px;">Welcome to My
+        Contacts App, your one-stop-shop for all your contact management needs. Our easy-to-use app allows you to
+        store, organize, and manage your contacts with ease. Whether you're looking for a way to stay connected with
+        friends and family, or you need a powerful tool to manage your professional contacts, My Contacts App has got
+        you covered.<br><br>With our intuitive interface, you can easily add new contacts, edit existing ones, and
+        organize your contacts into custom groups. Need to find a specific contact quickly? Our powerful search
+        functionality allows you to find the contact you need in seconds.<br><br>But My Contacts App is more than just a
+        simple contact management tool. Our app allows you to sync your contacts across multiple devices, ensuring that
+        your contacts are always up-to-date no matter where you are. Plus, with our built-in backup and restore
+        functionality, you can rest assured that your contacts are safe and secure.<br><br>So why wait? Sign up for My
+        Contacts App today and start managing your contacts like a pro!</p>
+    <script src="static/bootstrap/js/bootstrap.min.js"></script>
+</body>
 
-{% endblock body %}
+</html>

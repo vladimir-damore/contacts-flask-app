@@ -1,4 +1,4 @@
-# Contacts Flask Akpp
+# Contacts Flask App
 
 Contacts web application using Flask and Sqlite3
 

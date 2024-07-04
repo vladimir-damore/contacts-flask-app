@@ -1,4 +1,6 @@
-flenv/
+__pycache__/
+.venv/
 .git/
+.env
 .gitignore
-README.md
+database.sql

@@ -1,8 +1,9 @@
 FROM python
 
-LABEL org.opencontainers.image.authors="Harshit"
+LABEL maintainer="Harshit M"
+LABEL org.opencontainers.image.source="https://github.com/djharshit/contacts-app"
 
-WORKDIR /home/web-app/
+WORKDIR /home/app/
 
 COPY . .
 
@@ -10,4 +11,4 @@ RUN pip install -r requirements.txt
 
 EXPOSE 5000
 
-CMD ["python", "server.py" ]
+CMD [ "gunicorn", "-b", "0.0.0.0:5000", "server:app" ]
